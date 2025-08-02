@@ -6,7 +6,7 @@ import { AIResponsePanel } from './AIResponsePanel'
 import { SentimentIndicator } from './SentimentIndicator'
 import { ConversationList } from './ConversationList'
 import { MessageSquare, Send, Bot } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
+import { useToast } from '@/hooks/useToast'
 import type { ConversationContext, Message, SentimentData, CustomerProfile } from '@/types/types'
 
 interface ChatInterfaceProps {

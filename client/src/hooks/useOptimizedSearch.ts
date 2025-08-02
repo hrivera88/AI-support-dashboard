@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useDebounce } from './useDebounce'
 import { useCache } from './useCache'
 
@@ -9,13 +9,6 @@ interface SearchOptions {
   cacheTTL?: number
 }
 
-interface SearchResult<T> {
-  items: T[]
-  query: string
-  totalCount: number
-  isSearching: boolean
-  hasSearched: boolean
-}
 
 /**
  * Optimized search hook with debouncing, caching, and performance optimizations
@@ -36,6 +29,15 @@ export function useOptimizedSearch<T>(
   const [isSearching, setIsSearching] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // Track mounted state for cleanup
+  const isMountedRef = useRef(true)
+  
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   const debouncedQuery = useDebounce(query, debounceMs)
   
@@ -46,29 +48,38 @@ export function useOptimizedSearch<T>(
 
   const performSearch = useCallback(async (searchQuery: string) => {
     if (searchQuery.length < minSearchLength) {
-      setResults([])
-      setHasSearched(false)
-      setError(null)
+      if (isMountedRef.current) {
+        setResults([])
+        setHasSearched(false)
+        setError(null)
+      }
       return
     }
 
-    setIsSearching(true)
-    setError(null)
+    if (isMountedRef.current) {
+      setIsSearching(true)
+      setError(null)
+    }
 
     try {
       // Check cache first
       if (cacheResults) {
         const cachedResults = cache.getCache()
         if (cachedResults && !cache.isStale()) {
-          setResults(cachedResults)
-          setIsSearching(false)
-          setHasSearched(true)
+          if (isMountedRef.current) {
+            setResults(cachedResults)
+            setIsSearching(false)
+            setHasSearched(true)
+          }
           return
         }
       }
 
       // Perform actual search
       const searchResults = await searchFunction(searchQuery)
+      
+      // Only update state if component is still mounted
+      if (!isMountedRef.current) return
       
       // Cache results
       if (cacheResults) {
@@ -78,10 +89,14 @@ export function useOptimizedSearch<T>(
       setResults(searchResults)
       setHasSearched(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed')
-      setResults([])
+      if (isMountedRef.current) {
+        setError(err instanceof Error ? err.message : 'Search failed')
+        setResults([])
+      }
     } finally {
-      setIsSearching(false)
+      if (isMountedRef.current) {
+        setIsSearching(false)
+      }
     }
   }, [searchFunction, minSearchLength, cacheResults, cache])
 
@@ -188,6 +203,22 @@ export function usePaginatedSearch<T>(
     cacheResults: false // Handle caching at this level for pagination
   })
 
+  const resetPagination = useCallback(() => {
+    setPage(1)
+    setAllResults([])
+    setTotalCount(0)
+    setHasNextPage(false)
+  }, [])
+
+  // Reset pagination BEFORE search when query changes
+  const previousQuery = useRef(search.query)
+  useEffect(() => {
+    if (search.query !== previousQuery.current) {
+      resetPagination()
+      previousQuery.current = search.query
+    }
+  }, [search.query, resetPagination])
+
   // Update pagination state when results change
   useEffect(() => {
     if (search.hasSearched && !search.isSearching) {
@@ -206,20 +237,6 @@ export function usePaginatedSearch<T>(
       setPage(prev => prev + 1)
     }
   }, [hasNextPage, search.isSearching])
-
-  const resetPagination = useCallback(() => {
-    setPage(1)
-    setAllResults([])
-    setTotalCount(0)
-    setHasNextPage(false)
-  }, [])
-
-  // Reset pagination when query changes
-  useEffect(() => {
-    if (search.query && page > 1) {
-      resetPagination()
-    }
-  }, [search.query, resetPagination, page])
 
   return {
     ...search,

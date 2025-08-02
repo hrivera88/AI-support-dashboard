@@ -42,6 +42,14 @@ export function usePerformanceMonitor(
   const renderStartRef = useRef<number>(0)
   const renderTimesRef = useRef<number[]>([])
   const renderCountRef = useRef<number>(0)
+  const isMountedRef = useRef<boolean>(true)
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   // Start render timing
   const startRenderTiming = useCallback(() => {
@@ -51,7 +59,7 @@ export function usePerformanceMonitor(
 
   // End render timing
   const endRenderTiming = useCallback(() => {
-    if (renderStartRef.current === 0) return
+    if (renderStartRef.current === 0 || !isMountedRef.current) return
     
     const renderTime = performance.now() - renderStartRef.current
     renderTimesRef.current.push(renderTime)
@@ -65,15 +73,18 @@ export function usePerformanceMonitor(
 
     const averageRenderTime = renderTimesRef.current.reduce((a, b) => a + b, 0) / renderTimesRef.current.length
 
-    setMetrics(prev => ({
-      ...prev,
-      renderTime: averageRenderTime,
-      renderCount: renderCountRef.current,
-      lastRenderTime: renderTime,
-      ...(trackMemory && (performance as any).memory ? {
-        memoryUsage: (performance as any).memory
-      } : {})
-    }))
+    // Only update state if component is still mounted
+    if (isMountedRef.current) {
+      setMetrics(prev => ({
+        ...prev,
+        renderTime: averageRenderTime,
+        renderCount: renderCountRef.current,
+        lastRenderTime: renderTime,
+        ...(trackMemory && (performance as any).memory ? {
+          memoryUsage: (performance as any).memory
+        } : {})
+      }))
+    }
 
     renderStartRef.current = 0
   }, [maxSamples, trackMemory])
@@ -83,10 +94,12 @@ export function usePerformanceMonitor(
     const mountTime = performance.now()
     mountTimeRef.current = mountTime
 
-    setMetrics(prev => ({
-      ...prev,
-      componentMountTime: mountTime
-    }))
+    if (isMountedRef.current) {
+      setMetrics(prev => ({
+        ...prev,
+        componentMountTime: mountTime
+      }))
+    }
 
     // Log slow mounts in development
     if (process.env.NODE_ENV === 'development') {
@@ -154,6 +167,8 @@ export function useWebVitals() {
     CLS?: number // Cumulative Layout Shift
     TTFB?: number // Time to First Byte
   }>({})
+  
+  const isMountedRef = useRef<boolean>(true)
 
   useEffect(() => {
     // Only run in browser
@@ -162,7 +177,7 @@ export function useWebVitals() {
     // First Contentful Paint
     const observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        if (entry.name === 'first-contentful-paint') {
+        if (entry.name === 'first-contentful-paint' && isMountedRef.current) {
           setVitals(prev => ({ ...prev, FCP: entry.startTime }))
         }
       }
@@ -176,6 +191,7 @@ export function useWebVitals() {
 
     // Largest Contentful Paint
     const lcpObserver = new PerformanceObserver((list) => {
+      if (!isMountedRef.current) return
       const entries = list.getEntries()
       const lastEntry = entries[entries.length - 1]
       setVitals(prev => ({ ...prev, LCP: lastEntry.startTime }))
@@ -189,6 +205,7 @@ export function useWebVitals() {
 
     // First Input Delay
     const fidObserver = new PerformanceObserver((list) => {
+      if (!isMountedRef.current) return
       for (const entry of list.getEntries()) {
         setVitals(prev => ({ ...prev, FID: (entry as any).processingStart - entry.startTime }))
       }
@@ -202,11 +219,12 @@ export function useWebVitals() {
 
     // Time to First Byte
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
-    if (navigation) {
+    if (navigation && isMountedRef.current) {
       setVitals(prev => ({ ...prev, TTFB: navigation.responseStart - navigation.requestStart }))
     }
 
     return () => {
+      isMountedRef.current = false
       observer.disconnect()
       lcpObserver.disconnect()
       fidObserver.disconnect()

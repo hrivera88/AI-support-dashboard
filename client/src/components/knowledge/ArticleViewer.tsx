@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Book, Clock, Tag, Copy, ArrowLeft } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
+import { useToast } from '@/hooks/useToast'
 import type { KnowledgeArticle } from '@/types/types'
 
 interface ArticleViewerProps {

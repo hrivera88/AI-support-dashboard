@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { useAIResponse } from '@/hooks/useAIResponse'
 import { useResponseQuality } from '@/hooks/useResponseQuality'
 import { Bot, RefreshCw, Copy, CheckCircle, AlertCircle, Loader2, Sparkles } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
+import { useToast } from '@/hooks/useToast'
 import type { ConversationContext, CustomerProfile, ResponseTone } from '@/types/types'
 
 interface AIResponsePanelProps {
