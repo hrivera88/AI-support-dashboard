@@ -4,6 +4,7 @@ import helmet from 'helmet'
 import compression from 'compression'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
+import aiRoutes from './routes/ai.js'
 
 dotenv.config()
 
@@ -34,7 +35,10 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-// API routes placeholder
+// API routes
+app.use('/api/ai', aiRoutes)
+
+// API documentation
 app.get('/api', (req, res) => {
   res.json({ 
     message: 'AI Support Dashboard API',

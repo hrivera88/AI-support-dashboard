@@ -12,21 +12,22 @@ ai-support-dashboard/
 │   │   │   ├── chat/        # Chat interface components
 │   │   │   ├── dashboard/   # Analytics components
 │   │   │   ├── ai/          # AI feature components
-│   │   │   └── common/      # Shared components
+│   │   │   └── ui/          # Reusable UI components
 │   │   ├── hooks/           # Custom React hooks
 │   │   ├── services/        # API services
 │   │   ├── stores/          # Zustand stores
-│   │   ├── types/           # TypeScript types
+│   │   ├── types/           # TypeScript types & constants
 │   │   └── utils/           # Helper functions
 │   └── public/
-├── server/                   # Express backend (TypeScript)
-│   ├── src/
-│   │   ├── routes/          # API routes
-│   │   ├── services/        # Business logic
-│   │   ├── middleware/      # Express middleware
-│   │   └── utils/           # Helper functions
-│   └── data/                # Sample data/embeddings
-└── shared/                   # Shared types/constants
+└── server/                   # Express backend (TypeScript)
+    ├── src/
+    │   ├── routes/          # API routes
+    │   ├── services/        # Business logic
+    │   ├── types/           # TypeScript types
+    │   ├── constants/       # Application constants
+    │   ├── middleware/      # Express middleware
+    │   └── utils/           # Helper functions
+    └── data/                # Sample data/embeddings
 ```
 
 ## Features
