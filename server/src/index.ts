@@ -5,6 +5,7 @@ import compression from 'compression'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import aiRoutes from './routes/ai.js'
+import knowledgeRoutes from './routes/knowledge.js'
 
 dotenv.config()
 
@@ -37,6 +38,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/ai', aiRoutes)
+app.use('/api/knowledge', knowledgeRoutes)
 
 // API documentation
 app.get('/api', (req, res) => {
