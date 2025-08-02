@@ -204,21 +204,23 @@ export function KnowledgeDemo() {
                   {Object.entries(categoryStats).map(([category, count]) => (
                     <div key={category}>
                       <h3 className="font-semibold text-lg mb-2">{category} ({count})</h3>
-                      <div className="grid gap-2 ml-4">
+                      <div className="ml-4">
                         {allArticles
                           ?.filter(article => article.category === category)
                           .map(article => (
                             <Button
                               key={article.id}
                               variant="ghost"
-                              className="justify-start text-left h-auto p-3"
+                              className="justify-start text-left h-auto w-full p-3 block"
                               onClick={() => handleSelectArticle(article)}
                             >
-                              <BookOpen className="h-4 w-4 mr-2 flex-shrink-0" />
-                              <div>
-                                <div className="font-medium">{article.title}</div>
-                                <div className="text-sm text-muted-foreground line-clamp-1">
-                                  {article.content}
+                              <div className="flex items-start gap-2 w-full">
+                                <BookOpen className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                <div className="flex-1 min-w-0 overflow-hidden">
+                                  <div className="font-medium line-clamp-1 w-full">{article.title}</div>
+                                  <div className="text-sm text-muted-foreground line-clamp-1 w-full">
+                                    {article.content}
+                                  </div>
                                 </div>
                               </div>
                             </Button>

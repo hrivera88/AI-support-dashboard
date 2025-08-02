@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Book, Clock, Tag, Copy, ArrowLeft } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 import type { KnowledgeArticle } from '@/types/types'
 
 interface ArticleViewerProps {
@@ -16,6 +17,8 @@ export function ArticleViewer({
   onCopyContent, 
   showBackButton = true 
 }: ArticleViewerProps) {
+  const { toast } = useToast()
+
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       weekday: 'long',
@@ -30,10 +33,17 @@ export function ArticleViewer({
     
     navigator.clipboard.writeText(formattedContent).then(() => {
       onCopyContent?.(formattedContent)
-      // You could add a toast notification here
-      console.log('Article content copied to clipboard')
+      toast({
+        title: "Content copied!",
+        description: "Article content has been copied to your clipboard.",
+      })
     }).catch((err) => {
       console.error('Failed to copy content:', err)
+      toast({
+        title: "Copy failed",
+        description: "Failed to copy content to clipboard. Please try again.",
+        variant: "destructive"
+      })
     })
   }
 
