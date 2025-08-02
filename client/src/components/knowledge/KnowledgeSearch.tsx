@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useKnowledgeSearch } from '@/hooks/useKnowledgeSearch'
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor'
+import { useCache } from '@/hooks/useCache'
 import { Search, Filter, Book, Clock, Tag, Loader2 } from 'lucide-react'
 import type { KnowledgeArticle } from '@/types/types'
 
@@ -14,6 +16,18 @@ interface KnowledgeSearchProps {
 export function KnowledgeSearch({ onSelectArticle, contextQuery, autoSearch = false }: KnowledgeSearchProps) {
   const [localQuery, setLocalQuery] = useState(contextQuery || '')
   const [showFilters, setShowFilters] = useState(false)
+
+  // Performance monitoring
+  usePerformanceMonitor('KnowledgeSearch', {
+    sampleRate: 0.1,
+    trackMemory: true
+  })
+
+  // Cache for formatted dates to avoid recalculation
+  const dateCache = useCache<Record<string, string>>('knowledge-date-cache', {
+    ttl: 30 * 60 * 1000, // 30 minutes
+    storage: 'memory'
+  })
 
   const knowledge = useKnowledgeSearch({
     autoSearch,
@@ -50,13 +64,32 @@ export function KnowledgeSearch({ onSelectArticle, contextQuery, autoSearch = fa
     knowledge.updateFilters({ categories: newCategories })
   }
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
+  // Memoized date formatter with caching
+  const formatDate = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
-    }).format(new Date(date))
-  }
+    })
+    
+    return (date: Date) => {
+      const dateKey = date.toISOString()
+      const cachedDates = dateCache.getCache() || {}
+      
+      if (cachedDates[dateKey] && !dateCache.isStale()) {
+        return cachedDates[dateKey]
+      }
+      
+      const formatted = formatter.format(new Date(date))
+      const newCache = { ...cachedDates, [dateKey]: formatted }
+      dateCache.setCache(newCache)
+      
+      return formatted
+    }
+  }, [dateCache])
+
+  // Memoize search results to prevent unnecessary re-renders
+  const memoizedResults = useMemo(() => knowledge.results, [knowledge.results])
 
   return (
     <div className="space-y-6">
@@ -179,7 +212,7 @@ export function KnowledgeSearch({ onSelectArticle, contextQuery, autoSearch = fa
       {/* Search Results */}
       {knowledge.hasResults && (
         <div className="space-y-4">
-          {knowledge.results.map((article) => (
+          {memoizedResults.map((article) => (
             <Card 
               key={article.id}
               className="cursor-pointer hover:shadow-md transition-shadow"

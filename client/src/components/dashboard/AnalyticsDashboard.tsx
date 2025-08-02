@@ -1,14 +1,25 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, lazy, Suspense } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { PerformanceMetrics } from './PerformanceMetrics'
-import { SentimentTrends } from './SentimentTrends'
-import { ResponseQualityChart } from './ResponseQualityChart'
-import { AgentPerformance } from './AgentPerformance'
-import { ConversationInsights } from './ConversationInsights'
+import { LazyWrapper } from '@/components/ui/LazyWrapper'
 import { RealtimeStats } from './RealtimeStats'
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor'
+
+// Lazy-loaded components for better performance
+const PerformanceMetrics = lazy(() => import('./PerformanceMetrics').then(m => ({ default: m.PerformanceMetrics })))
+const SentimentTrends = lazy(() => import('./SentimentTrends').then(m => ({ default: m.SentimentTrends })))
+const ResponseQualityChart = lazy(() => import('./ResponseQualityChart').then(m => ({ default: m.ResponseQualityChart })))
+const AgentPerformance = lazy(() => import('./AgentPerformance').then(m => ({ default: m.AgentPerformance })))
+const ConversationInsights = lazy(() => import('./ConversationInsights').then(m => ({ default: m.ConversationInsights })))
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+  </div>
+)
 import { 
   BarChart3, 
   TrendingUp, 
@@ -30,6 +41,12 @@ interface AnalyticsDashboardProps {
 export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | '90d'>('7d')
   const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // Performance monitoring
+  usePerformanceMonitor('AnalyticsDashboard', {
+    trackMemory: true,
+    sampleRate: 0.1 // Sample 10% for production performance
+  })
 
   // Mock analytics data - in a real app, this would come from an API
   const analyticsData: AnalyticsData = useMemo(() => ({
@@ -226,38 +243,58 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
         </TabsList>
 
         <TabsContent value="performance">
-          <PerformanceMetrics 
-            data={analyticsData}
-            timeRange={timeRange}
-          />
+          <LazyWrapper>
+            <Suspense fallback={<LoadingFallback />}>
+              <PerformanceMetrics 
+                data={analyticsData}
+                timeRange={timeRange}
+              />
+            </Suspense>
+          </LazyWrapper>
         </TabsContent>
 
         <TabsContent value="sentiment">
-          <SentimentTrends 
-            data={analyticsData.sentimentTrend}
-            timeRange={timeRange}
-          />
+          <LazyWrapper>
+            <Suspense fallback={<LoadingFallback />}>
+              <SentimentTrends 
+                data={analyticsData.sentimentTrend}
+                timeRange={timeRange}
+              />
+            </Suspense>
+          </LazyWrapper>
         </TabsContent>
 
         <TabsContent value="quality">
-          <ResponseQualityChart 
-            data={analyticsData.responseQualityTrend}
-            timeRange={timeRange}
-          />
+          <LazyWrapper>
+            <Suspense fallback={<LoadingFallback />}>
+              <ResponseQualityChart 
+                data={analyticsData.responseQualityTrend}
+                timeRange={timeRange}
+              />
+            </Suspense>
+          </LazyWrapper>
         </TabsContent>
 
         <TabsContent value="agents">
-          <AgentPerformance 
-            data={analyticsData.agentPerformance}
-            timeRange={timeRange}
-          />
+          <LazyWrapper>
+            <Suspense fallback={<LoadingFallback />}>
+              <AgentPerformance 
+                data={analyticsData.agentPerformance}
+                timeRange={timeRange}
+              />
+            </Suspense>
+          </LazyWrapper>
         </TabsContent>
 
         <TabsContent value="insights">
-          <ConversationInsights 
-            data={analyticsData}
-            timeRange={timeRange}
-          />
+          <LazyWrapper>
+            <Suspense fallback={<LoadingFallback />}>
+              <ConversationInsights 
+                data={analyticsData}
+                timeRange={timeRange}
+              />
+            </Suspense>
+          </LazyWrapper>
         </TabsContent>
       </Tabs>
     </div>

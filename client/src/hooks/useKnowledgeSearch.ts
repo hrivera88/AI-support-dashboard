@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { KnowledgeApiService } from '@/services/knowledge'
+import { useDebounce } from './useDebounce'
 import type { 
   KnowledgeArticle, 
   KnowledgeSearchRequest, 
@@ -60,22 +61,23 @@ export function useKnowledgeSearch(options: UseKnowledgeSearchOptions = {}) {
     searchMutation.mutate(searchRequest)
   }, [query, searchFilters, searchMutation])
 
+  // Add debouncing for auto-search
+  const debouncedQuery = useDebounce(query, 500)
+
   const updateQuery = useCallback((newQuery: string) => {
     setQuery(newQuery)
-    
-    if (autoSearch && newQuery.trim()) {
-      // Debounce auto-search
-      const timeoutId = setTimeout(() => {
-        search(newQuery)
-      }, 500)
-      
-      return () => clearTimeout(timeoutId)
-    }
-  }, [autoSearch, search])
+  }, [])
 
   const updateFilters = useCallback((newFilters: Partial<typeof searchFilters>) => {
     setSearchFilters(prev => ({ ...prev, ...newFilters }))
   }, [])
+
+  // Auto-search when debounced query changes
+  useEffect(() => {
+    if (autoSearch && debouncedQuery.trim() && debouncedQuery.length >= 2) {
+      search(debouncedQuery)
+    }
+  }, [debouncedQuery, autoSearch, search])
 
   const clearSearch = useCallback(() => {
     setQuery('')
