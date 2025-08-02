@@ -95,7 +95,7 @@ export interface AnalyticsData {
   sentimentTrend: Array<{ date: string; score: number }>;
   responseQualityTrend: Array<{ date: string; score: number }>;
   topCategories: Array<{ category: string; count: number }>;
-  agentPerformance: Array<{ agentId: string; avgQuality: number; responseTime: number }>;
+  agentPerformance: Array<{ agentId: string; name: string; avgQuality: number; responseTime: number; conversationsHandled: number }>;
 }
 
 export interface APIError {

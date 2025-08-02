@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { ChatInterface } from './ChatInterface'
 import { MessageSquare, Users, TrendingUp, Clock } from 'lucide-react'
 import type { SentimentData } from '@/types/types'

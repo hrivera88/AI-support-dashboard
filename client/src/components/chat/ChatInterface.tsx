@@ -5,7 +5,7 @@ import { MessageThread } from './MessageThread'
 import { AIResponsePanel } from './AIResponsePanel'
 import { SentimentIndicator } from './SentimentIndicator'
 import { ConversationList } from './ConversationList'
-import { MessageSquare, Send, Bot, AlertCircle } from 'lucide-react'
+import { MessageSquare, Send, Bot } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import type { ConversationContext, Message, SentimentData, CustomerProfile } from '@/types/types'
 
@@ -273,7 +273,7 @@ export function ChatInterface({
                       ref={messageInputRef}
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
+                      onKeyDown={handleKeyPress}
                       placeholder="Type your response..."
                       className="w-full min-h-[80px] p-3 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-primary"
                       disabled={selectedConversation.status === 'closed'}

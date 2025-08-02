@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AIDemo } from '@/components/ai/AIDemo'
 import { KnowledgeDemo } from '@/components/knowledge/KnowledgeDemo'
 import { ChatDemo } from '@/components/chat/ChatDemo'
+import { AnalyticsDashboard } from '@/components/dashboard/AnalyticsDashboard'
 import { Bot, BookOpen, MessageSquare, BarChart3 } from 'lucide-react'
 
 const queryClient = new QueryClient()
@@ -44,11 +45,7 @@ function App() {
             </TabsContent>
             
             <TabsContent value="analytics">
-              <div className="text-center py-12">
-                <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Analytics Dashboard</h3>
-                <p className="text-muted-foreground">Coming next - comprehensive performance metrics and insights</p>
-              </div>
+              <AnalyticsDashboard />
             </TabsContent>
             
             <TabsContent value="ai">

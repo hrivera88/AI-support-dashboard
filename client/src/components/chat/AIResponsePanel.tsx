@@ -6,7 +6,7 @@ import { useAIResponse } from '@/hooks/useAIResponse'
 import { useResponseQuality } from '@/hooks/useResponseQuality'
 import { Bot, RefreshCw, Copy, CheckCircle, AlertCircle, Loader2, Sparkles } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import type { ConversationContext, CustomerProfile, ResponseTone, AIResponseOption } from '@/types/types'
+import type { ConversationContext, CustomerProfile, ResponseTone } from '@/types/types'
 
 interface AIResponsePanelProps {
   context: ConversationContext
@@ -63,11 +63,7 @@ export function AIResponsePanel({
     if (!response.trim()) return
 
     setShowQualityAnalysis(true)
-    responseQuality.evaluateResponse({
-      response,
-      context,
-      criteria: ['clarity', 'completeness', 'tone', 'accuracy', 'actionability']
-    })
+    responseQuality.evaluateResponse(response, JSON.stringify(context))
   }
 
   const handleCopyResponse = (response: string) => {
@@ -124,10 +120,10 @@ export function AIResponsePanel({
         {/* Generate Button */}
         <Button
           onClick={handleGenerateResponse}
-          disabled={aiResponse.isGenerating}
+          disabled={aiResponse.isLoading}
           className="w-full flex items-center gap-2"
         >
-          {aiResponse.isGenerating ? (
+          {aiResponse.isLoading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
               Generating...
@@ -171,13 +167,13 @@ export function AIResponsePanel({
                 variant="ghost"
                 size="sm"
                 onClick={handleGenerateResponse}
-                disabled={aiResponse.isGenerating}
+                disabled={aiResponse.isLoading}
               >
                 <RefreshCw className="h-3 w-3" />
               </Button>
             </div>
 
-            {aiResponse.responses.map((response, index) => (
+            {aiResponse.responses.map((response) => (
               <div
                 key={response.id}
                 className={`p-3 border rounded-lg cursor-pointer transition-all ${
@@ -253,7 +249,7 @@ export function AIResponsePanel({
         )}
 
         {/* Quality Analysis */}
-        {showQualityAnalysis && responseQuality.isEvaluating && (
+        {showQualityAnalysis && responseQuality.isLoading && (
           <div className="p-3 border rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -265,7 +261,7 @@ export function AIResponsePanel({
           </div>
         )}
 
-        {showQualityAnalysis && responseQuality.evaluation && !responseQuality.isEvaluating && (
+        {showQualityAnalysis && responseQuality.qualityScore && !responseQuality.isLoading && (
           <div className="p-3 border rounded-lg space-y-3">
             <h4 className="font-medium text-sm flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
@@ -275,14 +271,14 @@ export function AIResponsePanel({
             {/* Overall Score */}
             <div className="flex items-center justify-between">
               <span className="text-sm">Overall Quality:</span>
-              <Badge className={`${getQualityColor(responseQuality.evaluation.overall)}`}>
-                {responseQuality.evaluation.overall.toFixed(1)}/10
+              <Badge className={`${getQualityColor(responseQuality.qualityScore.overall)}`}>
+                {responseQuality.qualityScore.overall.toFixed(1)}/10
               </Badge>
             </div>
 
             {/* Detailed Scores */}
             <div className="space-y-2">
-              {Object.entries(responseQuality.evaluation)
+              {Object.entries(responseQuality.qualityScore)
                 .filter(([key]) => key !== 'overall' && key !== 'suggestions')
                 .map(([criterion, score]) => (
                   <div key={criterion} className="flex items-center justify-between text-sm">
@@ -295,11 +291,11 @@ export function AIResponsePanel({
             </div>
 
             {/* Suggestions */}
-            {responseQuality.evaluation.suggestions.length > 0 && (
+            {responseQuality.qualityScore.suggestions && responseQuality.qualityScore.suggestions.length > 0 && (
               <div className="space-y-1">
                 <span className="text-sm font-medium">Suggestions:</span>
                 <ul className="text-xs text-muted-foreground space-y-1">
-                  {responseQuality.evaluation.suggestions.map((suggestion, index) => (
+                  {responseQuality.qualityScore.suggestions.map((suggestion: string, index: number) => (
                     <li key={index} className="flex items-start gap-1">
                       <span>•</span>
                       <span>{suggestion}</span>
