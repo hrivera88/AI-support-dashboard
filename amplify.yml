@@ -1,0 +1,41 @@
+version: 1
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - cd client
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: client/dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - client/node_modules/**/*
+    appRoot: client
+  - backend:
+      phases:
+        preBuild:
+          commands:
+            - cd server
+            - npm ci
+        build:
+          commands:
+            - npm run build
+        postBuild:
+          commands:
+            - echo "Backend build completed"
+      artifacts:
+        baseDirectory: server
+        files:
+          - dist/**/*
+          - package.json
+          - package-lock.json
+      cache:
+        paths:
+          - server/node_modules/**/*
+    appRoot: server
